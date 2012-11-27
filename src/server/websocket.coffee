@@ -8,7 +8,8 @@ wrapSession = (conn) ->
   wrapper = new EventEmitter
   wrapper.abort = -> conn.close()
   wrapper.stop = -> conn.close()
-  wrapper.send = (response) -> conn.send JSON.stringify response
+  wrapper.send = (response) ->
+    conn.send JSON.stringify response if wrapper.ready()
   wrapper.ready = -> conn.readyState is 1
   conn.on 'message', (data) -> wrapper.emit 'message', JSON.parse data
   wrapper.headers = conn.upgradeReq.headers
