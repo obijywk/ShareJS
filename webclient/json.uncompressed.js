@@ -321,7 +321,7 @@ var WEB = true;
             newC = {
               p: component.p[component.p.length - 1]
             };
-            if (component.si) {
+            if (component.si != null) {
               newC.i = component.si;
             } else {
               newC.d = component.sd;
@@ -565,6 +565,14 @@ var WEB = true;
       var path;
       path = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       return this.doc.at(this.path.concat(depath(path)));
+    };
+
+    SubDoc.prototype.parent = function() {
+      if (this.path.length) {
+        return this.doc.at(this.path.slice(0, this.path.length - 1));
+      } else {
+        return void 0;
+      }
     };
 
     SubDoc.prototype.get = function() {

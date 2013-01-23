@@ -50,11 +50,6 @@ class Connection
       when 'websocket' then new WebSocket(host)
       else new BCSocket(host, reconnect:true)
 
-    # Send authentication message for BCSocket
-    # For SockJS or websocket we'll send after connection is open
-    if !socketImpl? or socketImpl == 'channel'
-      @socket.send({'auth': if authentication then authentication else null})
-
     @socket.onmessage = (msg) =>
       msg = JSON.parse(msg.data) if socketImpl in ['sockjs', 'websocket']
       if msg.auth is null
@@ -93,13 +88,14 @@ class Connection
 
     @socket.onopen = =>
       #console.warn 'onopen'
+
+      # Send authentication message
+      @send {
+        "auth": if authentication then authentication else null
+      }
+
       @lastError = @lastReceivedDoc = @lastSentDoc = null
       @setState 'handshaking'
-
-      # Send authentication message for SockJS and websocket
-      if socketImpl in ['sockjs', 'websocket']
-        @socket.send JSON.stringify {
-          'auth': if authentication then authentication else null}
 
     @socket.onconnecting = =>
       #console.warn 'connecting'
@@ -118,12 +114,12 @@ class Connection
       doc._connectionStateChanged state, data
 
   send: (data) ->
-    docName = data.doc
-
-    if docName is @lastSentDoc
-      delete data.doc
-    else
-      @lastSentDoc = docName
+    if data.doc
+      docName = data.doc
+      if docName is @lastSentDoc
+        delete data.doc
+      else
+        @lastSentDoc = docName
 
     #console.warn 'c->s', data
     data = JSON.stringify(data) if socketImpl in ['sockjs', 'websocket']
